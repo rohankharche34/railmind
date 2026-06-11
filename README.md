@@ -88,22 +88,50 @@ python3 run_detection.py image.jpg
 python3 run_detection.py 0 --output recording.mp4
 ```
 
-### 2. Incident Risk Prediction *(planned)*
+### 2. Incident Risk Prediction ✅ *(built)*
 
-Predict incident likelihood using historical and real-time data.
+Predict incident likelihood using weather, track condition, crowd density, and operational data.
 
-**Inputs:** Weather, train speed, track conditions, maintenance history, crowd density
-**Output:** Section risk score, contributing factors, inspection recommendation
-**Model:** XGBoost / LightGBM
+**Inputs:** Weather, train speed, track conditions, maintenance history, crowd density, visibility, time of day, track geometry
+**Output:** Section risk score (0–100), risk category, top 5 contributing factors, inspection recommendation
+**Model:** XGBoost (trained on 10K synthetic railway samples)
 
-### 3. Emergency Recommendation Agent *(planned)*
+#### Usage
 
-When an incident is detected, an LLM agent generates structured response actions.
+```bash
+# Start the API
+uvicorn modules.risk_prediction.app:app --host 0.0.0.0 --port 8001
+
+# Predict risk for a section
+curl -X POST http://localhost:8001/risk/predict \
+  -H "Content-Type: application/json" \
+  -d '{"weather_encoded":3,"track_condition_encoded":2,"crowd_density_encoded":3,"is_night":1}'
+```
+
+### 3. Emergency Recommendation Agent ✅ *(built)*
+
+When an incident is detected, an AI agent generates structured response actions. Uses LangGraph for the stateful workflow: `classify → recommend → format`. Falls back to a comprehensive rule engine when no LLM API key is set.
 
 **Example:**
 > Person detected on track → Risk: Critical → Actions: Stop Train 12045, Notify nearest station, Activate platform announcement, Alert RPF, Dispatch emergency unit
 
-**Tech:** LangGraph, LangChain, Gemini/OpenAI
+**Tech:** LangGraph, LangChain, OpenAI (optional), rule-based fallback
+
+#### Usage
+
+```bash
+# Without LLM (rule-based fallback — works immediately)
+uvicorn modules.emergency_agent.app:app --host 0.0.0.0 --port 8002
+
+# With LLM (set API key in .env)
+export OPENAI_API_KEY=sk-...
+uvicorn modules.emergency_agent.app:app --host 0.0.0.0 --port 8002
+
+# Assess an incident
+curl -X POST http://localhost:8002/emergency/assess \
+  -H "Content-Type: application/json" \
+  -d '{"incident_type":"fire_hazard","location":"Platform 3, Dadar","severity":"critical","risk_score":92}'
+```
 
 ### 4. Delay Propagation Intelligence *(planned)*
 
@@ -134,9 +162,10 @@ Conversational agent that operators can query:
 |-----------|------------|
 | Vision Detection | YOLOv8 (Ultralytics) |
 | Object Tracking | ByteTrack |
-| Risk Prediction | XGBoost / LightGBM |
-| Agent Framework | LangGraph |
-| RAG | FAISS |
+| Risk Prediction | XGBoost |
+| Agent Framework | LangGraph + LangChain |
+| LLM (optional) | OpenAI (GPT-4o-mini) |
+| Rule Engine | Built-in fallback (7 incident types) |
 | Backend | FastAPI |
 | Database | PostgreSQL |
 | Realtime | WebSockets + Redis |
@@ -149,24 +178,57 @@ Conversational agent that operators can query:
 
 ```
 rail-mind/
+├── data/                      # Sample images and videos
+├── models/                    # Trained model files
 ├── modules/
 │   ├── __init__.py
-│   └── detection/
+│   ├── detection/             # Human/Obstacle Detection (YOLOv8 + ByteTrack)
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── detector.py
+│   │   ├── tracker.py
+│   │   ├── alert.py
+│   │   ├── pipeline.py
+│   │   └── cli.py
+│   ├── risk_prediction/       # Incident Risk Prediction (XGBoost + FastAPI)
+│   │   ├── __init__.py
+│   │   ├── config.py
+│   │   ├── data_generator.py
+│   │   ├── train.py
+│   │   ├── model.py
+│   │   ├── schemas.py
+│   │   ├── router.py
+│   │   └── app.py
+│   └── emergency_agent/       # Emergency Recommendation Agent (LangGraph)
 │       ├── __init__.py
-│       ├── config.py         # Model config, class mappings, categories
-│       ├── detector.py       # YOLOv8 detection wrapper
-│       ├── tracker.py        # ByteTrack tracking wrapper
-│       ├── alert.py          # Alert engine (classification, dedup, viz)
-│       ├── pipeline.py       # Full detection → tracking → alert pipeline
-│       └── cli.py            # CLI entry point
-├── run_detection.py          # Top-level entry point
+│       ├── config.py
+│       ├── schemas.py
+│       ├── nodes.py
+│       ├── graph.py
+│       ├── router.py
+│       └── app.py
+├── run_detection.py
 ├── requirements.txt
+├── .env.example
 ├── .gitignore
 ├── LICENSE
 └── README.md
 ```
 
 ---
+
+## Environment Variables
+
+Copy `.env.example` to `.env` and configure:
+
+```bash
+cp .env.example .env
+```
+
+| Variable | Required | Default | Description |
+|----------|----------|---------|-------------|
+| `OPENAI_API_KEY` | No | — | API key for LLM-powered emergency recommendations. Without it, a rule-based fallback is used. |
+| `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI model name. |
 
 ## Getting Started
 
@@ -183,7 +245,7 @@ cd rail-mind
 pip install -r requirements.txt
 ```
 
-### Run Detection
+### Run Detection Module
 
 ```bash
 # Webcam
@@ -194,6 +256,23 @@ python3 run_detection.py path/to/video.mp4 --track --output result.mp4
 
 # Image
 python3 run_detection.py path/to/image.jpg
+```
+
+### Run Risk Prediction API
+
+```bash
+uvicorn modules.risk_prediction.app:app --host 0.0.0.0 --port 8001
+```
+
+### Run Emergency Agent API
+
+```bash
+# Without LLM (rule-based)
+uvicorn modules.emergency_agent.app:app --host 0.0.0.0 --port 8002
+
+# With LLM
+export OPENAI_API_KEY=sk-...
+uvicorn modules.emergency_agent.app:app --host 0.0.0.0 --port 8002
 ```
 
 ---
