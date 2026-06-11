@@ -1,5 +1,6 @@
 import argparse
 import sys
+import cv2
 from .pipeline import DetectionPipeline
 
 
@@ -23,11 +24,11 @@ def main():
     pipeline = DetectionPipeline(model_path=args.model, conf_threshold=args.conf)
     pipeline.tracking = args.track
 
-    source = args.source
-    if source.startswith("cam:"):
+    source: str | int = args.source
+    if isinstance(source, str) and source.startswith("cam:"):
         source = int(source.replace("cam:", ""))
 
-    is_image = source.endswith((".jpg", ".jpeg", ".png", ".bmp", ".tiff"))
+    is_image = isinstance(source, str) and source.endswith((".jpg", ".jpeg", ".png", ".bmp", ".tiff"))
 
     if is_image:
         frame, alerts = pipeline.process_image(source)
@@ -40,7 +41,6 @@ def main():
             print(f"  [{a.risk.upper()}] {a.category}: {a.label} "
                   f"(conf={a.confidence:.2f}, id={a.track_id})")
     else:
-        import cv2
         alerts = pipeline.process_video(source, args.output, not args.no_display)
         print(f"Total alerts triggered: {len(alerts)}")
 
