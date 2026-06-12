@@ -1,6 +1,6 @@
 from fastapi import APIRouter, Depends
 from sqlalchemy.orm import Session
-from sqlalchemy import func
+from sqlalchemy import func, select
 from backend.db.database import get_db
 from backend.db.models import Train, Alert, RiskLog, Station, Section
 
@@ -17,12 +17,13 @@ def dashboard_summary(db: Session = Depends(get_db)):
         .filter(Alert.resolved == False, Alert.severity == "critical")
         .scalar()
     ) or 0
-    avg_risk = (
-        db.query(func.avg(RiskLog.risk_score))
+    subq = (
+        select(RiskLog.risk_score)
         .order_by(RiskLog.created_at.desc())
         .limit(100)
-        .scalar()
-    ) or 0
+        .subquery()
+    )
+    avg_risk = db.query(func.avg(subq.c.risk_score)).scalar() or 0
 
     return {
         "total_trains": total_trains,

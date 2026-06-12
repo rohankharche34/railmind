@@ -37,7 +37,8 @@ export default function MapView() {
   const mapInstanceRef = useRef<any>(null);
 
   useEffect(() => {
-    if (typeof window === "undefined" || mapInstanceRef.current) return;
+    if (typeof window === "undefined") return;
+    if (mapRef.current && (mapRef.current as any)._leaflet_id) return;
 
     const initMap = async () => {
       const L = await import("leaflet");
@@ -51,6 +52,7 @@ export default function MapView() {
       });
 
       if (!mapRef.current) return;
+      if ((mapRef.current as any)._leaflet_id) return;
       const map = L.map(mapRef.current, { zoomControl: false }).setView([19.05, 72.92], 10);
       mapInstanceRef.current = map;
 
@@ -112,6 +114,9 @@ export default function MapView() {
       if (mapInstanceRef.current) {
         mapInstanceRef.current.remove();
         mapInstanceRef.current = null;
+      }
+      if (mapRef.current) {
+        delete (mapRef.current as any)._leaflet_id;
       }
     };
   }, []);

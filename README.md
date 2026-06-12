@@ -133,41 +133,90 @@ curl -X POST http://localhost:8002/emergency/assess \
   -d '{"incident_type":"fire_hazard","location":"Platform 3, Dadar","severity":"critical","risk_score":92}'
 ```
 
-### 4. Interactive Railway Command Dashboard ✅ *(built)*
+### 4. Unified Backend API ✅ *(built)*
 
-A real-time control room dashboard with live map, CCTV viewer, alerts, emergency recommendations, and an AI chat assistant.
+A FastAPI backend that integrates all modules, exposes REST and WebSocket endpoints, and connects to PostgreSQL for persistent storage.
+
+**Endpoints:**
+
+| Method | Path | Description |
+|--------|------|-------------|
+| `GET` | `/api/dashboard/summary` | Aggregated stats (trains, alerts, avg risk) |
+| `GET` | `/api/dashboard/map` | Trains, stations, risk zones |
+| `GET` | `/api/trains` | List all trains |
+| `GET` | `/api/alerts` | List alerts |
+| `POST` | `/risk/predict` | Risk prediction |
+| `POST` | `/emergency/assess` | Emergency assessment |
+| `WS` | `/ws` | Real-time event stream |
+
+**Tech:** FastAPI, SQLAlchemy 2.0, PostgreSQL, Redis, WebSockets
+
+#### Usage
+
+```bash
+# Install backend dependencies
+pip install -r backend/requirements.txt
+
+# Run with local database
+python backend/seed.py    # Creates tables and seeds demo data
+uvicorn backend.main:app --reload
+# Opens at http://localhost:8000
+
+# Run with Docker Compose (includes Redis)
+docker compose up
+```
+
+### 5. Interactive Railway Command Dashboard ✅ *(built)*
+
+A real-time control room dashboard with multi-page navigation, live map, CCTV viewer, alerts, emergency recommendations, and AI chat assistant.
+
+**Pages:**
+
+| Route | Page | Description |
+|-------|------|-------------|
+| `/` | **Home** | Railway overview with stats cards, system status, feature links, and news updates |
+| `/dashboard` | **Command Center** | Full operational dashboard with live map, CCTV, alerts, emergency recs, AI assistant |
+| `/map` | **Live Map** | Full-screen interactive Leaflet map with trains, stations, and risk zones |
+| `/alerts` | **Alerts & Incidents** | Active alerts and emergency recommendations side by side |
+| `/cctv` | **Surveillance** | Dedicated CCTV feed viewer with camera switching |
+| `/assistant` | **AI Assistant** | Conversational AI interface for railway queries |
+
+**Components:**
 
 | Component | Description |
 |-----------|-------------|
+| **Sidebar** | Collapsible navigation panel with feature links and active route highlighting |
 | **Live Network Map** | Leaflet map with train positions (color-coded: on-time/delayed/critical), stations (crowd density), and risk zone circles |
 | **CCTV Feed Viewer** | Simulated multi-camera feed with auto-rotate and thumbnail navigation |
 | **Risk Alert Panel** | Scrollable list of active alerts with severity badges, icons, and relative timestamps |
 | **Emergency Recommendations** | Collapsible cards with step-by-step actions, priorities, and assigned stakeholders |
 | **AI Chat Assistant** | Conversational interface answering queries about delays, risks, emergencies, and trains |
+| **Dashboard Header** | Top bar with title, system status indicator, and live clock |
 
-**Tech:** Next.js 16, TypeScript, Tailwind CSS, Leaflet, Lucide Icons
+**Tech:** Next.js 16, TypeScript, Tailwind CSS 4, Leaflet, Lucide Icons
 
 #### Usage
 
 ```bash
 cd dashboard
+npm install
 npm run dev
 # Opens at http://localhost:3000
 ```
 
-### 5. Delay Propagation Intelligence *(planned)*
+### 6. Delay Propagation Intelligence *(planned)*
 
 Predict how a single delayed train cascades across the network.
 
 **Model:** XGBoost over temporal graph data
 
-### 5. Railway Digital Twin *(planned)*
+### 7. Railway Digital Twin *(planned)*
 
 Interactive map dashboard showing trains, stations, incidents, alerts, and delays in real time.
 
 **Tech:** Next.js, React, Tailwind, WebSockets
 
-### 6. AI Agent Layer *(planned)*
+### 8. AI Agent Layer *(planned)*
 
 Conversational agent that operators can query:
 
@@ -188,13 +237,13 @@ Conversational agent that operators can query:
 | Agent Framework | LangGraph + LangChain |
 | LLM (optional) | OpenAI (GPT-4o-mini) |
 | Rule Engine | Built-in fallback (7 incident types) |
-| Backend | FastAPI |
-| Frontend | Next.js + TypeScript + Tailwind |
-| Maps | Leaflet (react-leaflet) |
+| Backend | FastAPI + SQLAlchemy |
+| Frontend | Next.js + TypeScript + Tailwind CSS |
+| Maps | Leaflet |
 | Icons | Lucide React |
-| Database | PostgreSQL |
+| Database | PostgreSQL (via psycopg2) |
 | Realtime | WebSockets + Redis |
-| Deployment | Docker |
+| Deployment | Docker Compose |
 
 ---
 
@@ -202,36 +251,56 @@ Conversational agent that operators can query:
 
 ```
 rail-mind/
-├── data/                      # Sample images and videos
-├── models/                    # Trained model files
-├── dashboard/                 # Interactive Command Center (Next.js)
+├── data/                          # Sample images and videos
+├── models/                        # Trained model files
+├── backend/                       # Unified FastAPI backend
+│   ├── db/
+│   │   ├── database.py            # SQLAlchemy engine & session
+│   │   ├── models.py              # ORM models (Train, Station, Alert, etc.)
+│   │   └── schema.sql             # PostgreSQL DDL
+│   ├── routers/
+│   │   ├── dashboard.py           # Dashboard summary & map endpoints
+│   │   ├── trains.py              # Train listing endpoint
+│   │   └── alerts.py              # Alerts endpoint
+│   ├── ws/
+│   │   ├── manager.py             # WebSocket connection manager
+│   │   └── redis_client.py        # Redis pub/sub client
+│   ├── main.py                    # FastAPI app entry point
+│   ├── seed.py                    # Database seeder
+│   └── requirements.txt
+├── dashboard/                     # Interactive Command Center (Next.js)
 │   ├── src/
 │   │   ├── app/
+│   │   │   ├── layout.tsx         # Root layout with sidebar
+│   │   │   ├── page.tsx           # Home page (overview + news)
+│   │   │   ├── dashboard/page.tsx # Command Center (full dashboard)
+│   │   │   ├── map/page.tsx       # Live map page
+│   │   │   ├── alerts/page.tsx    # Alerts & incidents page
+│   │   │   ├── cctv/page.tsx      # CCTV surveillance page
+│   │   │   └── assistant/page.tsx # AI assistant page
 │   │   ├── components/
+│   │   │   ├── Sidebar.tsx        # Navigation sidebar
 │   │   │   ├── DashboardHeader.tsx
-│   │   │   ├── MapView.tsx
-│   │   │   ├── CctvFeed.tsx
-│   │   │   ├── RiskAlertPanel.tsx
+│   │   │   ├── MapView.tsx        # Leaflet map with trains/stations/risk zones
+│   │   │   ├── CctvFeed.tsx       # Multi-camera feed viewer
+│   │   │   ├── RiskAlertPanel.tsx # Active alerts list
 │   │   │   ├── EmergencyRecommendations.tsx
 │   │   │   └── AiChatAssistant.tsx
 │   │   └── lib/
-│   │       ├── types.ts
-│   │       ├── mockData.ts
-│   │       └── api.ts
+│   │       ├── types.ts           # TypeScript interfaces
+│   │       ├── mockData.ts        # Demo data
+│   │       └── api.ts             # API client
 │   ├── package.json
 │   └── next.config.ts
 ├── modules/
-│   ├── __init__.py
-│   ├── detection/             # Human/Obstacle Detection (YOLOv8 + ByteTrack)
-│   │   ├── __init__.py
+│   ├── detection/                 # Human/Obstacle Detection (YOLOv8 + ByteTrack)
 │   │   ├── config.py
 │   │   ├── detector.py
 │   │   ├── tracker.py
 │   │   ├── alert.py
 │   │   ├── pipeline.py
 │   │   └── cli.py
-│   ├── risk_prediction/       # Incident Risk Prediction (XGBoost + FastAPI)
-│   │   ├── __init__.py
+│   ├── risk_prediction/           # Incident Risk Prediction (XGBoost + FastAPI)
 │   │   ├── config.py
 │   │   ├── data_generator.py
 │   │   ├── train.py
@@ -239,8 +308,7 @@ rail-mind/
 │   │   ├── schemas.py
 │   │   ├── router.py
 │   │   └── app.py
-│   └── emergency_agent/       # Emergency Recommendation Agent (LangGraph)
-│       ├── __init__.py
+│   └── emergency_agent/           # Emergency Recommendation Agent (LangGraph)
 │       ├── config.py
 │       ├── schemas.py
 │       ├── nodes.py
@@ -248,12 +316,51 @@ rail-mind/
 │       ├── router.py
 │       └── app.py
 ├── run_detection.py
-├── requirements.txt
+├── requirements.txt               # ML module dependencies
+├── docker-compose.yml             # Redis + Backend + Dashboard
+├── Dockerfile                     # Backend container
 ├── .env.example
 ├── .gitignore
 ├── LICENSE
 └── README.md
 ```
+
+---
+
+## Database
+
+RailMind uses **PostgreSQL** with **SQLAlchemy 2.0** ORM. By default, it connects to a local `postgres:16-alpine` container defined in `docker-compose.yml`.
+
+### Using Supabase (Cloud PostgreSQL)
+
+RailMind is fully compatible with Supabase (managed PostgreSQL). To switch:
+
+1. Create a Supabase project at [supabase.com](https://supabase.com)
+2. Copy your connection URI from Project Settings → Database
+3. Set it in `.env`:
+
+```
+DATABASE_URL=postgresql+psycopg2://postgres:[PASSWORD]@db.[REF].supabase.co:6543/postgres?sslmode=require
+```
+
+4. Run with Docker (Redis only):
+```bash
+docker compose up
+# or without Docker:
+python backend/seed.py && uvicorn backend.main:app --reload
+```
+
+### Tables
+
+| Table | Description |
+|-------|-------------|
+| `trains` | Live train positions, speed, status, delay |
+| `stations` | Station metadata |
+| `sections` | Track sections with location and radius |
+| `alerts` | Detected incidents with severity, type, location |
+| `incidents` | Escalated alerts with action plans and stakeholders |
+| `risk_logs` | Historical risk predictions with factors |
+| `crowd_logs` | Crowd density measurements |
 
 ---
 
@@ -267,61 +374,69 @@ cp .env.example .env
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
+| `DATABASE_URL` | No | `postgresql+psycopg2://railmind:railmind@localhost:5432/railmind` | PostgreSQL connection string |
 | `OPENAI_API_KEY` | No | — | API key for LLM-powered emergency recommendations. Without it, a rule-based fallback is used. |
 | `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI model name. |
+
+---
 
 ## Getting Started
 
 ### Prerequisites
 
 - Python 3.10+
-- pip
+- Node.js 22+
+- npm
+- Docker & Docker Compose (optional, for containerized setup)
 
-### Install
+### Quick Start (Full Stack)
 
 ```bash
+# 1. Clone the repo
 git clone https://github.com/rohankharche34/rail-mind.git
 cd rail-mind
+
+# 2. Backend setup
+python -m venv .venv
+source .venv/bin/activate
+pip install -r backend/requirements.txt
 pip install -r requirements.txt
-```
 
-### Run Detection Module
+# 3. Configure environment
+cp .env.example .env
+# Edit .env with your settings (DATABASE_URL, OPENAI_API_KEY, etc.)
 
-```bash
-# Webcam
-python3 run_detection.py 0 --track
+# 4. Seed the database and start the backend
+python backend/seed.py
+uvicorn backend.main:app --reload
+# API at http://localhost:8000
 
-# Video file
-python3 run_detection.py path/to/video.mp4 --track --output result.mp4
-
-# Image
-python3 run_detection.py path/to/image.jpg
-```
-
-### Run Risk Prediction API
-
-```bash
-uvicorn modules.risk_prediction.app:app --host 0.0.0.0 --port 8001
-```
-
-### Run Emergency Agent API
-
-```bash
-# Without LLM (rule-based)
-uvicorn modules.emergency_agent.app:app --host 0.0.0.0 --port 8002
-
-# With LLM
-export OPENAI_API_KEY=sk-...
-uvicorn modules.emergency_agent.app:app --host 0.0.0.0 --port 8002
-```
-
-### Run Dashboard
-
-```bash
+# 5. Frontend setup (separate terminal)
 cd dashboard
 npm install
 npm run dev
-# Opens at http://localhost:3000
+# Dashboard at http://localhost:3000
+```
+
+### Docker Setup
+
+```bash
+docker compose up
+# Backend at http://localhost:8000
+# Dashboard at http://localhost:3000
+```
+
+### Run Individual Modules
+
+```bash
+# Detection module
+python3 run_detection.py 0 --track
+
+# Risk prediction API
+uvicorn modules.risk_prediction.app:app --host 0.0.0.0 --port 8001
+
+# Emergency agent API
+uvicorn modules.emergency_agent.app:app --host 0.0.0.0 --port 8002
 ```
 
 ---
