@@ -59,7 +59,7 @@ Current systems are **reactive**. RailMind makes them **predictive**.
 
 ## Modules
 
-### 1. Human / Obstacle Detection on Tracks ✅ *(built)*
+### 1. Human / Obstacle Detection on Tracks *(built)*
 
 Real-time detection of objects and hazards from CCTV feeds using computer vision.
 
@@ -88,7 +88,7 @@ python3 run_detection.py image.jpg
 python3 run_detection.py 0 --output recording.mp4
 ```
 
-### 2. Incident Risk Prediction ✅ *(built)*
+### 2. Incident Risk Prediction *(built)*
 
 Predict incident likelihood using weather, track condition, crowd density, and operational data.
 
@@ -108,7 +108,7 @@ curl -X POST http://localhost:8001/risk/predict \
   -d '{"weather_encoded":3,"track_condition_encoded":2,"crowd_density_encoded":3,"is_night":1}'
 ```
 
-### 3. Emergency Recommendation Agent ✅ *(built)*
+### 3. Emergency Recommendation Agent *(built)*
 
 When an incident is detected, an AI agent generates structured response actions. Uses LangGraph for the stateful workflow: `classify → recommend → format`. Falls back to a comprehensive rule engine when no LLM API key is set.
 
@@ -133,7 +133,7 @@ curl -X POST http://localhost:8002/emergency/assess \
   -d '{"incident_type":"fire_hazard","location":"Platform 3, Dadar","severity":"critical","risk_score":92}'
 ```
 
-### 4. Unified Backend API ✅ *(built)*
+### 4. Unified Backend API *(built)*
 
 A FastAPI backend that integrates all modules, exposes REST and WebSocket endpoints, and connects to PostgreSQL for persistent storage.
 
@@ -166,7 +166,7 @@ uvicorn backend.main:app --reload
 docker compose up
 ```
 
-### 5. Interactive Railway Command Dashboard ✅ *(built)*
+### 5. Interactive Railway Command Dashboard *(built)*
 
 A real-time control room dashboard with multi-page navigation, live map, CCTV viewer, alerts, emergency recommendations, and AI chat assistant.
 
