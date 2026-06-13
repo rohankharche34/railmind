@@ -1,4 +1,13 @@
-import { Train, Station, RiskZone, Alert, EmergencyRecommendation } from "./types";
+import {
+  Train,
+  Station,
+  RiskZone,
+  OperationalAlert,
+  Alert,
+  IntelligenceLog,
+  SuggestedAction,
+  EmergencyRecommendation,
+} from "./types";
 
 export const trains: Train[] = [
   { id: "12045", name: "Mumbai-Pune Intercity", lat: 19.076, lng: 72.877, speed: 85, status: "delayed", delay_minutes: 12 },
@@ -27,7 +36,7 @@ export const riskZones: RiskZone[] = [
   { id: "R4", section: "D9", lat: 19.220, lng: 73.100, radius: 600, risk_score: 20, risk_category: "low", top_factors: ["Routine monitoring"] },
 ];
 
-export const alerts: Alert[] = [
+export const alerts: OperationalAlert[] = [
   { id: "A1", type: "human_intrusion", label: "Human Intrusion", location: "Section A12, km 45", severity: "critical", timestamp: new Date(Date.now() - 2 * 60000), description: "Person detected walking on tracks" },
   { id: "A2", type: "fire_hazard", label: "Fire Hazard", location: "Platform 3, Dadar", severity: "critical", timestamp: new Date(Date.now() - 5 * 60000), description: "Sparks detected near electrical panel" },
   { id: "A3", type: "unattended_object", label: "Unattended Object", location: "CSMT, Main Concourse", severity: "high", timestamp: new Date(Date.now() - 15 * 60000), description: "Suspicious bag near ticket counter" },
@@ -69,3 +78,101 @@ export const emergencyRecommendations: EmergencyRecommendation[] = [
     ],
   },
 ];
+
+export const mockIncidents: Alert[] = [
+  {
+    id: "INC-94821",
+    severity: "critical",
+    title: "Track Obstruction",
+    location: "Sector 4B",
+    timestamp: "20:18:42",
+    timeAgo: "3m ago",
+    status: "active",
+    detectionSource: "CV Module CAM-4",
+    impactLevel: "Critical — 2 trains affected",
+    assignedUnit: "Emergency Response Alpha",
+  },
+  {
+    id: "INC-94819",
+    severity: "high",
+    title: "Signal Failure Interlock Alpha",
+    location: "Dadar Central",
+    timestamp: "20:12:08",
+    timeAgo: "9m ago",
+    status: "investigating",
+    detectionSource: "Telemetry Node 42",
+    impactLevel: "High — cascading delays",
+    assignedUnit: "Signal Maintenance Unit",
+  },
+  {
+    id: "INC-94815",
+    severity: "medium",
+    title: "Power Surge Substation G-9",
+    location: "Kalyan Junction",
+    timestamp: "19:58:31",
+    timeAgo: "23m ago",
+    status: "active",
+    detectionSource: "SCADA Monitor",
+  },
+];
+
+export const intelligenceLogs: IntelligenceLog[] = [
+  {
+    timestamp: "20:18:40",
+    type: "system",
+    message: "RAG pipeline connected to incident INC-94821",
+  },
+  {
+    timestamp: "20:18:45",
+    type: "anomaly",
+    message: "Object classification: debris/obstruction (94% confidence)",
+  },
+  {
+    timestamp: "20:19:02",
+    type: "recommendation",
+    message: "Immediate halt required for T-991 approaching Sector 4B",
+  },
+  {
+    timestamp: "20:19:15",
+    type: "info",
+    message: "Emergency unit dispatched — ETA 6 min",
+  },
+  {
+    timestamp: "20:19:30",
+    type: "system",
+    message: "Cross-referencing 3 similar historical incidents (2021, 2022, 2023)",
+  },
+];
+
+export const streamIntelligenceLogs: IntelligenceLog[] = [
+  {
+    timestamp: "20:19:45",
+    type: "anomaly",
+    message: "Secondary sensor corroboration from Track Sensor TS-44",
+  },
+  {
+    timestamp: "20:20:02",
+    type: "recommendation",
+    message: "Proposed reroute: divert T-991 to Track 5 via Switch 12A",
+  },
+  {
+    timestamp: "20:20:18",
+    type: "info",
+    message: "Station master notified at Dadar Central",
+  },
+  {
+    timestamp: "20:20:35",
+    type: "system",
+    message: "LangGraph agent state: awaiting operator authorization",
+  },
+  {
+    timestamp: "20:20:52",
+    type: "anomaly",
+    message: "Thermal signature detected near obstruction zone",
+  },
+];
+
+export const suggestedAction: SuggestedAction = {
+  description: "Authorize automated train halt and reroute via Switch 12A for T-991",
+  canAuthorize: true,
+};
