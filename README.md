@@ -142,8 +142,8 @@ RailMind is a unified platform that combines:
 | **Vision** | YOLOv8 (Ultralytics), ByteTrack, OpenCV, PyTorch |
 | **Backend** | Python 3.12, FastAPI, Uvicorn |
 | **ML / Risk** | XGBoost, Pandas, NumPy, Scikit-learn |
-| **Agent** | LangGraph, LangChain, OpenAI GPT-4o-mini (optional) |
-| **Database** | PostgreSQL 16, SQLAlchemy 2.0 ORM |
+| **Agent** | LangGraph, LangChain, OpenAI GPT-4o-mini (optional), Google Gemini 2.0 Flash (optional) |
+| **Database** | PostgreSQL 16, SQLAlchemy 2.0 ORM (SQLite fallback if no DATABASE_URL set) |
 | **Real-time** | WebSockets, Redis pub/sub |
 | **Frontend** | Next.js 16, React 19, TypeScript 5 |
 | **Styling** | Tailwind CSS v4, Lucide Icons |
@@ -307,9 +307,10 @@ Supports 7 incident types with comprehensive response plans:
 - Human Intrusion, Unattended Object, Track Obstacle
 - Animal on Tracks, Fire Hazard, Fall Detected, Smoke/Fire
 
-**Dual mode:**
+**Triple mode:**
 - **Rule-based fallback** (default, no API key needed) — comprehensive plans for all 7 types
-- **LLM-powered** (set `OPENAI_API_KEY`) — dynamic reasoning via GPT-4o-mini
+- **Gemini-powered** (set `GOOGLE_API_KEY`) — dynamic reasoning via Gemini 2.0 Flash (tried first if key present)
+- **OpenAI-powered** (set `OPENAI_API_KEY`) — dynamic reasoning via GPT-4o-mini (used if no Gemini key)
 
 ```bash
 # Start standalone API
@@ -419,7 +420,7 @@ npm run dev
 
 ## Database
 
-RailMind uses **PostgreSQL** with **SQLAlchemy 2.0** ORM. By default, it connects to a local instance defined in `docker-compose.yml`.
+RailMind uses **PostgreSQL** with **SQLAlchemy 2.0** ORM. If no `DATABASE_URL` is set, it falls back to a local **SQLite** file (`./railmind.db`), so you can run the backend without any database server.
 
 ### Tables
 
@@ -460,9 +461,11 @@ cp .env.example .env
 
 | Variable | Required | Default | Description |
 |----------|----------|---------|-------------|
-| `DATABASE_URL` | No | `postgresql+psycopg2://railmind:railmind@localhost:5432/railmind` | PostgreSQL connection string |
-| `OPENAI_API_KEY` | No | — | OpenAI API key for LLM-powered emergency reasoning. Without it, rule-based fallback is used. |
+| `DATABASE_URL` | No | `sqlite:///./railmind.db` | PostgreSQL connection string. If unset, uses local SQLite file (no server needed). |
+| `OPENAI_API_KEY` | No | — | OpenAI API key for LLM-powered emergency reasoning. Falls back to rule-based if unset. |
 | `OPENAI_MODEL` | No | `gpt-4o-mini` | OpenAI model name for emergency agent |
+| `GOOGLE_API_KEY` | No | — | Google AI API key for Gemini-powered emergency reasoning (tried before OpenAI if set). |
+| `GEMINI_MODEL` | No | `gemini-2.0-flash` | Gemini model name for emergency agent |
 | `REDIS_URL` | No | `redis://localhost:6379/0` | Redis connection for WebSocket pub/sub |
 
 **Frontend environment** (set at build time on Vercel):
@@ -496,15 +499,13 @@ python -m venv .venv
 source .venv/bin/activate
 pip install -r backend/requirements.txt
 
-# 3. Configure environment
-cp .env.example .env
-# Edit .env with your settings
-
-# 4. Seed the database and start the backend
-python backend/seed.py
+# 3. Start the backend (no PostgreSQL or Redis needed — uses SQLite by default)
 uvicorn backend.main:app --reload
 # API at http://localhost:8000
 # Docs at http://localhost:8000/docs
+
+# 4. (Optional) Seed the database with demo data
+python backend/seed.py
 
 # 5. Frontend setup (separate terminal)
 cd dashboard
