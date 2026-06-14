@@ -24,8 +24,12 @@ export default function Sidebar() {
   return (
     <>
       {/* Mobile bottom nav */}
-      <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-slate-700 bg-slate-900 px-2 py-2 md:hidden">
-        {navItems.map((item) => {
+      <nav className="fixed bottom-0 left-0 right-0 z-50 flex items-center justify-around border-t border-slate-700 bg-slate-900 px-1 py-1.5 md:hidden">
+        <Link href="/" className="flex flex-col items-center gap-0.5 rounded-lg px-1 py-1">
+          <img src="/logo.svg" alt="RailMind" className="w-6 h-6" />
+          <span className="text-[8px] text-slate-500">RailMind</span>
+        </Link>
+        {navItems.slice(1).map((item) => {
           const active = pathname === item.href;
           const Icon = item.icon;
           return (
@@ -52,17 +56,13 @@ export default function Sidebar() {
         <div className="flex items-center justify-between px-4 h-14 border-b border-slate-700">
           {!collapsed && (
             <div className="flex items-center gap-2">
-              <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">
-                RM
-              </div>
+              <img src="/logo.svg" alt="RailMind" className="w-7 h-7" />
               <span className="text-white text-sm font-semibold">RailMind</span>
             </div>
           )}
           {collapsed && (
             <div className="w-full flex justify-center">
-              <div className="w-7 h-7 bg-blue-600 rounded-lg flex items-center justify-center text-white font-bold text-xs">
-                RM
-              </div>
+              <img src="/logo.svg" alt="RailMind" className="w-7 h-7" />
             </div>
           )}
           <button

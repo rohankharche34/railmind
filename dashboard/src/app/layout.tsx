@@ -18,6 +18,7 @@ const jetbrainsMono = JetBrains_Mono({
 export const metadata: Metadata = {
   title: "RailMind — Command Center",
   description: "AI-Powered Railway Safety, Monitoring & Decision Intelligence Platform",
+  icons: { icon: "/logo.svg" },
 };
 
 export default function RootLayout({
